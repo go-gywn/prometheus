@@ -113,10 +113,15 @@ func extrapolatedRate(vals []parser.Value, args parser.Expressions, enh *EvalNod
 		// Handle counter resets:
 		prevValue := samples.Floats[0].F
 		for _, currPoint := range samples.Floats[1:] {
-			if currPoint.F < prevValue {
+			// modified by chan
+			if currPoint.F*2 < prevValue {
 				resultFloat += prevValue
 			}
 			prevValue = currPoint.F
+		}
+		// added by chan
+		if resultFloat < 0 {
+			resultFloat = 0
 		}
 	default:
 		// TODO: add RangeTooShortWarning
@@ -299,8 +304,12 @@ func instantValue(vals []parser.Value, out Vector, isRate bool) (Vector, annotat
 
 	var resultValue float64
 	if isRate && lastSample.F < previousSample.F {
-		// Counter reset.
-		resultValue = lastSample.F
+		// Counter reset. modified by chan
+		if lastSample.F*2 < previousSample.F {
+			resultValue = lastSample.F
+		} else {
+			return out, nil
+		}
 	} else {
 		resultValue = lastSample.F - previousSample.F
 	}
